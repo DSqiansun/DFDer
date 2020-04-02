@@ -1,0 +1,43 @@
+---
+title: "generater"
+author: "qian"
+date: "4/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(DiagrammeR, xlsx, plyr, igraph)
+```
+
+
+```{r}
+file <- 'DAGs.xlsx'
+res <- read.xlsx(file, 1,stringsAsFactors=FALSE)  # Lire la prémière feuille
+res[is.na(res)] = ' '
+
+g <- graph_from_data_frame(res[, c('Depenecy', 'Target' )], directed=TRUE)
+target='C'
+sub_g <- make_ego_graph(g, order=length(V(g)), nodes=target, mode="in")
+sub_data <- rename(as_data_frame(sub_g[[1]], what="edges"),c('from'='Depenecy', 'to'='Target') )
+res <- merge(sub_data,res, by=c("Depenecy" ,"Target"))
+
+
+unique_values <- union(res$Target, res$Depenecy)
+new_id <- as.numeric(as.factor(sort(unique_values)))
+key_value <- data.frame(new_id, unique_values)
+
+data <- merge(res, rename(key_value,c('new_id'='Target_id') ), by.x = "Target", by.y = "unique_values") %>%
+merge(., rename(key_value,c('new_id'='Depenecy_id') ), by.x = "Depenecy", by.y = "unique_values")
+
+header <- "
+graph LR
+"
+paste_data <- paste0(data$Depenecy_id,'[',data$Depenecy,']-->|',data$operation, '|', data$Target_id,'[', data$Target, ']')
+graph <- paste0(header,paste(paste_data, collapse="\n"))
+
+mermaid(graph)
+
+
+
+```

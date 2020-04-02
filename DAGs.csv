@@ -1,0 +1,7 @@
+﻿Target,Depenecy,operation
+A,B,
+A,C,O1
+B,C,O1
+C,D,O1
+D,E,O1
+A,E,O2
